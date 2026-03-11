@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Проверка гарантии</title>
     
-    <!-- Telegram Web App SDK (загружаем, но не используем напрямую) -->
+    <!-- Telegram Web App SDK (ЗАГРУЖАЕМ ПЕРВЫМ и СРАЗУ ИНИЦИАЛИЗИРУЕМ) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <!-- MAX Bridge SDK -->
@@ -24,9 +24,7 @@
     <div class="container">
         <h1 class="title">🔍 Проверка гарантии</h1>
         
-        <div class="platform-badge" id="platformBadge">
-            <!-- Сюда будет подставляться значок платформы -->
-        </div>
+        <!-- Убираем бейдж платформы, он ломал верстку -->
         
         <div class="search-container">
             <div class="search-wrapper">
@@ -96,8 +94,11 @@
         <div id="error" class="error-message hidden"></div>
     </div>
 
+    <!-- Сначала подключаем конфиг -->
     <script src="config.js"></script>
+    <!-- ПОТОМ адаптер платформы -->
     <script src="platform-adapter.js"></script>
+    <!-- И только потом основное приложение -->
     <script src="app.js"></script>
 </body>
 </html>

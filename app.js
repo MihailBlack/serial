@@ -1,7 +1,16 @@
+// Исправленная версия для Telegram
+
 class WarrantyChecker {
     constructor() {
         this.init();
         this.bindEvents();
+        
+        // Приветственная вибрация
+        setTimeout(() => {
+            if (window.Platform) {
+                window.Platform.vibrate('light');
+            }
+        }, 500);
     }
 
     init() {
@@ -12,7 +21,6 @@ class WarrantyChecker {
         this.loader = document.getElementById('loader');
         this.result = document.getElementById('result');
         this.error = document.getElementById('error');
-        this.platformBadge = document.getElementById('platformBadge');
         
         // Элементы результата
         this.stationName = document.getElementById('stationName');
@@ -30,32 +38,32 @@ class WarrantyChecker {
         // Показываем/скрываем крестик
         this.toggleClearButton();
         
-        // Показываем платформу (для отладки, можно убрать)
-        this.showPlatformBadge();
-        
-        // Приветственная вибрация
-        setTimeout(() => {
-            window.Platform.vibrate('light');
-        }, 500);
+        // Адаптация под тему Telegram
+        this.applyTelegramTheme();
     }
     
-    showPlatformBadge() {
-        const platform = window.Platform.getPlatformName();
-        let icon = '';
-        let text = '';
+    applyTelegramTheme() {
+        if (!window.Platform) return;
         
-        if (platform === 'telegram') {
-            icon = '📱';
-            text = 'Telegram';
-        } else if (platform === 'max') {
-            icon = '💼';
-            text = 'MAX';
+        const scheme = window.Platform.getColorScheme();
+        const container = document.querySelector('.container');
+        const title = document.querySelector('.title');
+        
+        if (scheme === 'dark') {
+            document.body.style.background = '#1a202c';
+            if (container) {
+                container.style.background = '#2d3748';
+                container.style.boxShadow = '0 20px 60px rgba(0,0,0,0.5)';
+            }
+            if (title) {
+                title.style.color = '#f7fafc';
+            }
         } else {
-            icon = '🌐';
-            text = 'Web';
+            document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            if (container) {
+                container.style.background = 'white';
+            }
         }
-        
-        this.platformBadge.innerHTML = `<span class="platform-icon">${icon}</span> <span class="platform-text">${text}</span>`;
     }
 
     loadGoogleAPI() {
@@ -66,17 +74,17 @@ class WarrantyChecker {
 
     bindEvents() {
         this.searchBtn.addEventListener('click', () => {
-            window.Platform.vibrate('medium');
+            if (window.Platform) window.Platform.vibrate('medium');
             this.searchSerial();
         });
         
         this.clearBtn.addEventListener('click', () => {
-            window.Platform.vibrate('light');
+            if (window.Platform) window.Platform.vibrate('light');
             this.clearInput();
         });
         
         this.scanBtn.addEventListener('click', () => {
-            window.Platform.vibrate('heavy');
+            if (window.Platform) window.Platform.vibrate('heavy');
             this.scanQRCode();
         });
         
@@ -86,46 +94,44 @@ class WarrantyChecker {
         
         this.serialInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                window.Platform.vibrate('medium');
+                if (window.Platform) window.Platform.vibrate('medium');
                 this.searchSerial();
             }
         });
         
         this.serialInput.addEventListener('focus', () => {
-            window.Platform.vibrate('light');
+            if (window.Platform) window.Platform.vibrate('light');
         });
     }
 
     scanQRCode() {
+        if (!window.Platform) {
+            this.showError('Ошибка инициализации');
+            return;
+        }
+        
         const success = window.Platform.scanQRCode(
-            // Когда QR отсканирован
             (qrText) => {
                 console.log('Отсканирован QR:', qrText);
-                window.Platform.vibrate('success');
+                if (window.Platform) window.Platform.vibrate('success');
                 
                 this.serialInput.value = qrText;
                 this.toggleClearButton();
                 
                 // Автоматически ищем после сканирования
                 setTimeout(() => {
-                    window.Platform.vibrate('medium');
+                    if (window.Platform) window.Platform.vibrate('medium');
                     this.searchSerial();
                 }, 300);
             },
-            // Когда сканер закрыт
             () => {
                 console.log('Сканер закрыт');
-                window.Platform.vibrate('light');
+                if (window.Platform) window.Platform.vibrate('light');
             }
         );
         
         if (!success) {
-            // Если сканер не поддерживается
-            window.Platform.showPopup({
-                title: 'Сканирование недоступно',
-                message: 'На вашей платформе сканирование QR пока не поддерживается. Введите номер вручную.',
-                buttons: [{id: 'ok', text: 'OK'}]
-            });
+            this.showError('Сканирование доступно только в Telegram');
         }
     }
 
@@ -199,7 +205,7 @@ class WarrantyChecker {
         
         if (!serial) {
             this.showError('Введите серийный номер');
-            window.Platform.vibrate('error');
+            if (window.Platform) window.Platform.vibrate('error');
             return;
         }
 
@@ -222,11 +228,10 @@ class WarrantyChecker {
 
             if (!rows || rows.length === 0) {
                 this.showError('Таблица пуста');
-                window.Platform.vibrate('error');
+                if (window.Platform) window.Platform.vibrate('error');
                 return;
             }
 
-            // Ищем серийный номер
             let found = null;
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
@@ -243,16 +248,16 @@ class WarrantyChecker {
 
             if (found) {
                 this.showResult(found);
-                window.Platform.vibrate('success');
+                if (window.Platform) window.Platform.vibrate('success');
             } else {
                 this.showError('Серийный номер не найден');
-                window.Platform.vibrate('error');
+                if (window.Platform) window.Platform.vibrate('error');
             }
 
         } catch (error) {
             console.error('Ошибка:', error);
             this.showError('Ошибка при поиске. Проверьте подключение к интернету.');
-            window.Platform.vibrate('error');
+            if (window.Platform) window.Platform.vibrate('error');
         } finally {
             this.hideLoader();
         }
@@ -263,7 +268,7 @@ class WarrantyChecker {
         
         if (!saleDate) {
             this.showError('Неверный формат даты в таблице');
-            window.Platform.vibrate('error');
+            if (window.Platform) window.Platform.vibrate('error');
             return;
         }
 
@@ -288,13 +293,9 @@ class WarrantyChecker {
         if (daysLeft < 0) {
             status = 'expired';
             statusText = '❌ Гарантия истекла';
-            window.Platform.vibrate('warning');
         } else if (daysLeft < 30) {
             status = 'warning';
             statusText = '⚠️ Гарантия скоро истекает';
-            window.Platform.vibrate('warning');
-        } else {
-            window.Platform.vibrate('success');
         }
 
         this.statusIcon.className = 'status-icon ' + status;
@@ -302,20 +303,22 @@ class WarrantyChecker {
         this.statusText.textContent = statusText;
 
         this.daysRemaining.textContent = daysLeft < 0 ? 'Истекла' : daysLeft + ' дн.';
-        this.daysRemaining.className = 'info-value days-remaining' + (daysLeft < 0 ? ' expired' : '');
+        
+        if (daysLeft < 0) {
+            this.daysRemaining.style.color = '#f56565';
+        } else if (daysLeft < 30) {
+            this.daysRemaining.style.color = '#ed8936';
+        } else {
+            this.daysRemaining.style.color = '#2d3748';
+        }
 
         this.result.classList.remove('hidden');
-        
-        setTimeout(() => {
-            window.Platform.vibrate('light');
-        }, 200);
     }
 
     showLoader() {
         this.loader.classList.remove('hidden');
         this.searchBtn.disabled = true;
         this.scanBtn.disabled = true;
-        window.Platform.vibrate('light');
     }
 
     hideLoader() {
@@ -327,14 +330,10 @@ class WarrantyChecker {
     showError(message) {
         this.error.textContent = message;
         this.error.classList.remove('hidden');
-        window.Platform.vibrate('error');
         
-        // Показываем всплывающее окно платформы
-        window.Platform.showPopup({
-            title: 'Ошибка',
-            message: message,
-            buttons: [{id: 'ok', text: 'OK'}]
-        });
+        if (window.Platform) {
+            window.Platform.vibrate('error');
+        }
     }
 
     hideError() {
@@ -348,14 +347,8 @@ class WarrantyChecker {
 
 // Запуск приложения
 document.addEventListener('DOMContentLoaded', () => {
-    // Ждем инициализации платформы
+    // Даем время на инициализацию платформы
     setTimeout(() => {
         new WarrantyChecker();
-        
-        // Адаптация под тему
-        const scheme = window.Platform.getColorScheme();
-        if (scheme === 'dark') {
-            document.body.style.background = 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)';
-        }
     }, 100);
 });
