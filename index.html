@@ -14,7 +14,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- Стили - подключаем ПРЯМО ЗДЕСЬ, без отдельного файла для надежности -->
+    <!-- Стили -->
     <style>
         * {
             margin: 0;
@@ -30,6 +30,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            transition: background 0.3s ease;
         }
 
         .container {
@@ -39,6 +40,7 @@
             border-radius: 24px;
             padding: 25px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
         }
 
         .title {
@@ -47,6 +49,7 @@
             font-size: 26px;
             margin-bottom: 25px;
             font-weight: 600;
+            transition: color 0.3s ease;
         }
 
         .search-wrapper {
@@ -62,10 +65,14 @@
             border: 2px solid #e2e8f0;
             border-radius: 14px;
             outline: none;
+            transition: all 0.3s ease;
+            background: white;
+            color: #2d3748;
         }
 
         .search-input:focus {
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .clear-btn {
@@ -79,15 +86,17 @@
             font-size: 18px;
             cursor: pointer;
             padding: 5px;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
         }
 
         .clear-btn:hover {
+            color: #4a5568;
             background: #f7fafc;
         }
 
@@ -106,13 +115,22 @@
             font-size: 18px;
             cursor: pointer;
             padding: 8px;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
+            border-radius: 10px;
+            width: 36px;
+            height: 36px;
             box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .scan-btn:hover {
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .scan-btn:active {
+            transform: translateY(-50%) scale(0.95);
         }
 
         .search-btn {
@@ -125,11 +143,17 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
 
         .search-btn:disabled {
             opacity: 0.7;
+            transform: none;
             cursor: not-allowed;
         }
 
@@ -158,7 +182,19 @@
             border-radius: 18px;
             padding: 20px;
             margin-top: 20px;
+            animation: slideIn 0.3s ease;
             border: 1px solid #e2e8f0;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .result-header {
@@ -234,6 +270,18 @@
             padding: 12px 10px;
             border-radius: 10px;
             margin-bottom: 15px;
+            border: none;
+        }
+
+        .station-row .info-label {
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .station-row .info-value {
+            color: #2d3748;
+            font-weight: 700;
+            font-size: 16px;
         }
 
         .info-row {
@@ -251,6 +299,9 @@
         .info-label {
             color: #718096;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .info-value {
@@ -268,10 +319,11 @@
             margin-top: 20px;
             text-align: center;
             border: 1px solid #feb2b2;
+            font-weight: 500;
         }
 
         .hidden {
-            display: none !important;
+            display: none;
         }
     </style>
 </head>
@@ -313,32 +365,32 @@
             <div class="result-content">
                 <div class="info-row station-row">
                     <span class="info-label">📍 Зарядная станция:</span>
-                    <span class="info-value" id="stationName">—</span>
+                    <span class="info-value" id="stationName"></span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">🔢 Серийный номер:</span>
-                    <span class="info-value" id="serialNumber">—</span>
+                    <span class="info-value" id="serialNumber"></span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">📅 Дата продажи:</span>
-                    <span class="info-value" id="saleDate">—</span>
+                    <span class="info-value" id="saleDate"></span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">⏱️ Срок гарантии:</span>
-                    <span class="info-value" id="warrantyPeriod">—</span>
+                    <span class="info-value" id="warrantyPeriod"></span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">📆 Гарантия до:</span>
-                    <span class="info-value" id="warrantyUntil">—</span>
+                    <span class="info-value" id="warrantyUntil"></span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">⏳ Осталось дней:</span>
-                    <span class="info-value" id="daysRemaining">—</span>
+                    <span class="info-value" id="daysRemaining"></span>
                 </div>
             </div>
         </div>
@@ -349,7 +401,7 @@
     <script>
         // Конфигурация
         const CONFIG = {
-            SPREADSHEED_ID: '1ijID-VPJ48qz53gq4MXQTxAxhrFdMuEltm0TY6gwIYQ',
+            SPREADSHEET_ID: '1ijID-VPJ48qz53gq4MXQTxAxhrFdMuEltm0TY6gwIYQ',
             SHEET_NAME: 'Sheet1',
             API_KEY: 'AIzaSyAJr_tsIBBK3COL6AL_8fziqJrKDWDhUVM',
             RANGE: 'A:D'
@@ -367,6 +419,13 @@
             constructor() {
                 this.init();
                 this.bindEvents();
+                
+                // Приветственная вибрация
+                setTimeout(() => {
+                    if (tg && tg.HapticFeedback) {
+                        tg.HapticFeedback.impactOccurred('light');
+                    }
+                }, 500);
             }
             
             init() {
@@ -398,13 +457,64 @@
             }
             
             bindEvents() {
-                this.searchBtn.addEventListener('click', () => this.searchSerial());
-                this.clearBtn.addEventListener('click', () => this.clearInput());
-                this.scanBtn.addEventListener('click', () => this.scanQRCode());
-                this.serialInput.addEventListener('input', () => this.toggleClearButton());
-                this.serialInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.searchSerial();
+                this.searchBtn.addEventListener('click', () => {
+                    this.vibrate('medium');
+                    this.searchSerial();
                 });
+                
+                this.clearBtn.addEventListener('click', () => {
+                    this.vibrate('light');
+                    this.clearInput();
+                });
+                
+                this.scanBtn.addEventListener('click', () => {
+                    this.vibrate('heavy');
+                    this.scanQRCode();
+                });
+                
+                this.serialInput.addEventListener('input', () => this.toggleClearButton());
+                
+                this.serialInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.vibrate('medium');
+                        this.searchSerial();
+                    }
+                });
+                
+                this.serialInput.addEventListener('focus', () => {
+                    this.vibrate('light');
+                });
+            }
+            
+            vibrate(type = 'light') {
+                if (!tg || !tg.HapticFeedback) return;
+                
+                try {
+                    switch(type) {
+                        case 'light':
+                            tg.HapticFeedback.impactOccurred('light');
+                            break;
+                        case 'medium':
+                            tg.HapticFeedback.impactOccurred('medium');
+                            break;
+                        case 'heavy':
+                            tg.HapticFeedback.impactOccurred('heavy');
+                            break;
+                        case 'success':
+                            tg.HapticFeedback.notificationOccurred('success');
+                            break;
+                        case 'error':
+                            tg.HapticFeedback.notificationOccurred('error');
+                            break;
+                        case 'warning':
+                            tg.HapticFeedback.notificationOccurred('warning');
+                            break;
+                        default:
+                            tg.HapticFeedback.impactOccurred('light');
+                    }
+                } catch (e) {
+                    console.log('Haptic feedback error:', e);
+                }
             }
             
             toggleClearButton() {
@@ -428,13 +538,17 @@
                     tg.showScanQrPopup({
                         text: 'Наведите камеру на QR-код с серийным номером'
                     }, (qrText) => {
+                        this.vibrate('success');
                         this.serialInput.value = qrText;
                         this.toggleClearButton();
-                        setTimeout(() => this.searchSerial(), 300);
+                        setTimeout(() => {
+                            this.vibrate('medium');
+                            this.searchSerial();
+                        }, 300);
                         return true;
                     });
                 } else {
-                    this.showError('Сканирование доступно только в Telegram');
+                    this.showError('Сканирование недоступно');
                 }
             }
             
@@ -467,6 +581,7 @@
                 
                 if (!serial) {
                     this.showError('Введите серийный номер');
+                    this.vibrate('error');
                     return;
                 }
                 
@@ -481,7 +596,7 @@
                     });
                     
                     const response = await gapi.client.sheets.spreadsheets.values.get({
-                        spreadsheetId: CONFIG.SPREADSHEED_ID,
+                        spreadsheetId: CONFIG.SPREADSHEET_ID,
                         range: `${CONFIG.SHEET_NAME}!${CONFIG.RANGE}`
                     });
                     
@@ -489,6 +604,7 @@
                     
                     if (!rows || rows.length === 0) {
                         this.showError('Таблица пуста');
+                        this.vibrate('error');
                         return;
                     }
                     
@@ -508,13 +624,16 @@
                     
                     if (found) {
                         this.showResult(found);
+                        this.vibrate('success');
                     } else {
                         this.showError('Серийный номер не найден');
+                        this.vibrate('error');
                     }
                     
                 } catch (error) {
                     console.error('Ошибка:', error);
                     this.showError('Ошибка при поиске');
+                    this.vibrate('error');
                 } finally {
                     this.hideLoader();
                 }
@@ -525,6 +644,7 @@
                 
                 if (!saleDate) {
                     this.showError('Неверный формат даты');
+                    this.vibrate('error');
                     return;
                 }
                 
@@ -551,9 +671,13 @@
                 if (daysLeft < 0) {
                     status = 'expired';
                     statusText = '❌ Гарантия истекла';
+                    this.vibrate('warning');
                 } else if (daysLeft < 30) {
                     status = 'warning';
                     statusText = '⚠️ Гарантия скоро истекает';
+                    this.vibrate('warning');
+                } else {
+                    this.vibrate('success');
                 }
                 
                 this.statusIcon.className = 'status-icon ' + status;
@@ -563,12 +687,17 @@
                 this.daysRemaining.textContent = daysLeft < 0 ? 'Истекла' : daysLeft + ' дн.';
                 
                 this.result.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    this.vibrate('light');
+                }, 200);
             }
             
             showLoader() {
                 this.loader.classList.remove('hidden');
                 this.searchBtn.disabled = true;
                 this.scanBtn.disabled = true;
+                this.vibrate('light');
             }
             
             hideLoader() {
@@ -580,10 +709,7 @@
             showError(message) {
                 this.error.textContent = message;
                 this.error.classList.remove('hidden');
-                
-                if (tg && tg.HapticFeedback) {
-                    tg.HapticFeedback.notificationOccurred('error');
-                }
+                this.vibrate('error');
             }
             
             hideError() {
@@ -598,6 +724,14 @@
         // Запуск после загрузки страницы
         document.addEventListener('DOMContentLoaded', () => {
             new WarrantyChecker();
+            
+            // Адаптация под тему Telegram
+            if (tg.colorScheme === 'dark') {
+                document.body.style.background = '#1a202c';
+                document.querySelector('.container').style.background = '#2d3748';
+                document.querySelector('.container').style.boxShadow = '0 20px 60px rgba(0,0,0,0.5)';
+                document.querySelector('.title').style.color = '#f7fafc';
+            }
         });
     </script>
 </body>
