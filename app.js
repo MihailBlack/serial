@@ -11,12 +11,16 @@ class WarrantyChecker {
     init() {
         this.serialInput = document.getElementById('serialInput');
         this.searchBtn = document.getElementById('searchBtn');
+        this.clearBtn = document.getElementById('clearBtn');
         this.loader = document.getElementById('loader');
         this.result = document.getElementById('result');
         this.error = document.getElementById('error');
         
+        // Элементы результата
+        this.stationName = document.getElementById('stationName');
         this.serialNumber = document.getElementById('serialNumber');
         this.saleDate = document.getElementById('saleDate');
+        this.warrantyPeriod = document.getElementById('warrantyPeriod');
         this.warrantyUntil = document.getElementById('warrantyUntil');
         this.daysRemaining = document.getElementById('daysRemaining');
         this.statusIcon = document.getElementById('statusIcon');
@@ -24,6 +28,9 @@ class WarrantyChecker {
         
         // Загружаем Google API
         this.loadGoogleAPI();
+        
+        // Показываем/скрываем крестик
+        this.toggleClearButton();
     }
 
     loadGoogleAPI() {
@@ -34,19 +41,37 @@ class WarrantyChecker {
 
     bindEvents() {
         this.searchBtn.addEventListener('click', () => this.searchSerial());
+        this.clearBtn.addEventListener('click', () => this.clearInput());
+        this.serialInput.addEventListener('input', () => this.toggleClearButton());
         this.serialInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.searchSerial();
         });
+    }
+
+    // Показываем или скрываем крестик
+    toggleClearButton() {
+        if (this.serialInput.value.length > 0) {
+            this.clearBtn.classList.remove('hidden');
+        } else {
+            this.clearBtn.classList.add('hidden');
+        }
+    }
+
+    // Очищаем поле ввода
+    clearInput() {
+        this.serialInput.value = '';
+        this.serialInput.focus();
+        this.clearBtn.classList.add('hidden');
+        this.hideResult();
+        this.hideError();
     }
 
     // Парсинг даты из формата ДД.ММ.ГГГГ
     parseDate(dateStr) {
         if (!dateStr) return null;
         
-        // Очищаем строку от лишних пробелов
         dateStr = dateStr.toString().trim();
         
-        // Пробуем формат ДД.ММ.ГГГГ
         if (dateStr.includes('.')) {
             const parts = dateStr.split('.');
             if (parts.length === 3) {
@@ -54,7 +79,6 @@ class WarrantyChecker {
                 const month = parseInt(parts[1], 10) - 1;
                 const year = parseInt(parts[2], 10);
                 
-                // Проверяем корректность даты
                 if (day > 0 && day <= 31 && month >= 0 && month < 12 && year > 2000) {
                     return new Date(year, month, day);
                 }
@@ -75,6 +99,25 @@ class WarrantyChecker {
         return `${day}.${month}.${year}`;
     }
 
+    // Форматирование срока гарантии
+    formatWarrantyPeriod(days) {
+        const years = days / 365;
+        if (years >= 1) {
+            const yearsRounded = Math.round(years * 10) / 10;
+            return `${yearsRounded} ${this.getYearWord(yearsRounded)} (${days} дн.)`;
+        }
+        return `${days} дней`;
+    }
+
+    getYearWord(years) {
+        const num = Math.floor(years);
+        if (num >= 11 && num <= 19) return 'лет';
+        const lastDigit = num % 10;
+        if (lastDigit === 1) return 'год';
+        if (lastDigit >= 2 && lastDigit <= 4) return 'года';
+        return 'лет';
+    }
+
     async searchSerial() {
         const serial = this.serialInput.value.trim();
         
@@ -88,13 +131,11 @@ class WarrantyChecker {
         this.hideError();
 
         try {
-            // Инициализируем Google Sheets API
             await gapi.client.init({
                 apiKey: CONFIG.API_KEY,
                 discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
             });
 
-            // Получаем данные из таблицы
             const response = await gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: CONFIG.SPREADSHEET_ID,
                 range: `${CONFIG.SHEET_NAME}!${CONFIG.RANGE}`
@@ -115,8 +156,9 @@ class WarrantyChecker {
                 if (row[0] && row[0].toString().toLowerCase() === serial.toLowerCase()) {
                     found = {
                         serial: row[0],
-                        saleDate: row[1] || '',
-                        warrantyDays: row[2] ? parseInt(row[2], 10) : DEFAULT_WARRANTY_DAYS
+                        stationName: row[1] || 'Не указано',      // НОВОЕ: название станции
+                        saleDate: row[2] || '',                   // Дата продажи
+                        warrantyDays: row[3] ? parseInt(row[3], 10) : DEFAULT_WARRANTY_DAYS  // Срок гарантии
                     };
                     break;
                 }
@@ -130,7 +172,7 @@ class WarrantyChecker {
 
         } catch (error) {
             console.error('Ошибка:', error);
-            this.showError('Ошибка при поиске. Проверьте консоль.');
+            this.showError('Ошибка при поиске. Проверьте подключение к интернету.');
         } finally {
             this.hideLoader();
         }
@@ -157,8 +199,10 @@ class WarrantyChecker {
         const daysLeft = Math.ceil((warrantyUntil - today) / (1000 * 60 * 60 * 24));
 
         // Заполняем данные
+        this.stationName.textContent = data.stationName;
         this.serialNumber.textContent = data.serial;
         this.saleDate.textContent = this.formatDate(saleDate);
+        this.warrantyPeriod.textContent = this.formatWarrantyPeriod(data.warrantyDays);
         this.warrantyUntil.textContent = this.formatDate(warrantyUntil);
         
         // Определяем статус
@@ -179,11 +223,8 @@ class WarrantyChecker {
         this.statusText.textContent = statusText;
 
         // Дни до окончания
-        if (daysLeft < 0) {
-            this.daysRemaining.textContent = 'Истекла';
-        } else {
-            this.daysRemaining.textContent = daysLeft + ' дн.';
-        }
+        this.daysRemaining.textContent = daysLeft < 0 ? 'Истекла' : daysLeft + ' дн.';
+        this.daysRemaining.className = 'info-value days-remaining' + (daysLeft < 0 ? ' expired' : '');
 
         // Показываем результат
         this.result.classList.remove('hidden');
@@ -202,6 +243,11 @@ class WarrantyChecker {
     showError(message) {
         this.error.textContent = message;
         this.error.classList.remove('hidden');
+        
+        // Вибрация на телефоне (если поддерживается)
+        if (tg && tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred('error');
+        }
     }
 
     hideError() {
@@ -216,4 +262,9 @@ class WarrantyChecker {
 // Запуск приложения
 document.addEventListener('DOMContentLoaded', () => {
     new WarrantyChecker();
+    
+    // Адаптация под тему Telegram
+    if (tg.colorScheme === 'dark') {
+        document.body.style.background = 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)';
+    }
 });

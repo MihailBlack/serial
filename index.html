@@ -11,6 +11,9 @@
     <!-- Google Sheets API -->
     <script src="https://apis.google.com/js/api.js"></script>
     
+    <!-- Font Awesome для иконок (крестик) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <!-- Стили -->
     <link rel="stylesheet" href="style.css">
 </head>
@@ -19,13 +22,18 @@
         <h1 class="title">🔍 Проверка гарантии</h1>
         
         <div class="search-container">
-            <input 
-                type="text" 
-                id="serialInput" 
-                class="search-input" 
-                placeholder="Введите серийный номер"
-                autocomplete="off"
-            >
+            <div class="search-wrapper">
+                <input 
+                    type="text" 
+                    id="serialInput" 
+                    class="search-input" 
+                    placeholder="Введите серийный номер"
+                    autocomplete="off"
+                >
+                <button id="clearBtn" class="clear-btn hidden" aria-label="Очистить">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
             <button id="searchBtn" class="search-btn">
                 <span>Найти</span>
             </button>
@@ -43,23 +51,34 @@
             </div>
             
             <div class="result-content">
+                <!-- НОВОЕ: Название станции -->
+                <div class="info-row station-row">
+                    <span class="info-label">📍 Зарядная станция:</span>
+                    <span class="info-value" id="stationName"></span>
+                </div>
+                
                 <div class="info-row">
-                    <span class="info-label">Серийный номер:</span>
+                    <span class="info-label">🔢 Серийный номер:</span>
                     <span class="info-value" id="serialNumber"></span>
                 </div>
                 
                 <div class="info-row">
-                    <span class="info-label">Дата продажи:</span>
+                    <span class="info-label">📅 Дата продажи:</span>
                     <span class="info-value" id="saleDate"></span>
                 </div>
                 
                 <div class="info-row">
-                    <span class="info-label">Гарантия до:</span>
+                    <span class="info-label">⏱️ Срок гарантии:</span>
+                    <span class="info-value" id="warrantyPeriod"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">📆 Гарантия до:</span>
                     <span class="info-value" id="warrantyUntil"></span>
                 </div>
                 
                 <div class="info-row">
-                    <span class="info-label">Осталось дней:</span>
+                    <span class="info-label">⏳ Осталось дней:</span>
                     <span class="info-value" id="daysRemaining"></span>
                 </div>
             </div>
