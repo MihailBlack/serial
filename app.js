@@ -12,6 +12,7 @@ class WarrantyChecker {
         this.serialInput = document.getElementById('serialInput');
         this.searchBtn = document.getElementById('searchBtn');
         this.clearBtn = document.getElementById('clearBtn');
+        this.scanBtn = document.getElementById('scanBtn');
         this.loader = document.getElementById('loader');
         this.result = document.getElementById('result');
         this.error = document.getElementById('error');
@@ -31,24 +32,141 @@ class WarrantyChecker {
         
         // Показываем/скрываем крестик
         this.toggleClearButton();
+        
+        // Приветственная вибрация (очень легкая)
+        this.vibrate('light');
+    }
+
+    // НОВЫЙ МЕТОД: Вибрация разных типов
+    vibrate(type = 'light') {
+        if (!tg || !tg.HapticFeedback) return;
+        
+        try {
+            switch(type) {
+                case 'light':
+                    // Легкое нажатие (для кнопок, полей ввода)
+                    tg.HapticFeedback.impactOccurred('light');
+                    break;
+                    
+                case 'medium':
+                    // Среднее нажатие (для важных действий)
+                    tg.HapticFeedback.impactOccurred('medium');
+                    break;
+                    
+                case 'heavy':
+                    // Сильное нажатие (для очень важных действий)
+                    tg.HapticFeedback.impactOccurred('heavy');
+                    break;
+                    
+                case 'success':
+                    // Успешное действие
+                    tg.HapticFeedback.notificationOccurred('success');
+                    break;
+                    
+                case 'error':
+                    // Ошибка
+                    tg.HapticFeedback.notificationOccurred('error');
+                    break;
+                    
+                case 'warning':
+                    // Предупреждение
+                    tg.HapticFeedback.notificationOccurred('warning');
+                    break;
+                    
+                case 'selection':
+                    // Изменение выделения
+                    tg.HapticFeedback.selectionChanged();
+                    break;
+                    
+                default:
+                    tg.HapticFeedback.impactOccurred('light');
+            }
+        } catch (e) {
+            console.log('Haptic feedback error:', e);
+        }
     }
 
     loadGoogleAPI() {
         gapi.load('client', () => {
             console.log('Google API загружен');
+            this.vibrate('light'); // Легкая вибрация при загрузке API
         });
     }
 
     bindEvents() {
-        this.searchBtn.addEventListener('click', () => this.searchSerial());
-        this.clearBtn.addEventListener('click', () => this.clearInput());
-        this.serialInput.addEventListener('input', () => this.toggleClearButton());
+        this.searchBtn.addEventListener('click', () => {
+            this.vibrate('medium'); // Вибрация при нажатии на поиск
+            this.searchSerial();
+        });
+        
+        this.clearBtn.addEventListener('click', () => {
+            this.vibrate('light'); // Легкая вибрация при очистке
+            this.clearInput();
+        });
+        
+        this.scanBtn.addEventListener('click', () => {
+            this.vibrate('heavy'); // Сильная вибрация при открытии сканера
+            this.scanQRCode();
+        });
+        
+        this.serialInput.addEventListener('input', () => {
+            this.toggleClearButton();
+        });
+        
         this.serialInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.searchSerial();
+            if (e.key === 'Enter') {
+                this.vibrate('medium'); // Вибрация при поиске через Enter
+                this.searchSerial();
+            }
+        });
+        
+        // Вибрация при фокусе на поле ввода
+        this.serialInput.addEventListener('focus', () => {
+            this.vibrate('light');
         });
     }
 
-    // Показываем или скрываем крестик
+    scanQRCode() {
+        if (!tg || !tg.showScanQrPopup) {
+            this.showError('Сканирование не поддерживается в этом окружении');
+            this.vibrate('error'); // Вибрация ошибки
+            return;
+        }
+
+        try {
+            tg.showScanQrPopup({
+                text: 'Наведите камеру на QR-код с серийным номером'
+            }, (qrText) => {
+                console.log('Отсканирован QR:', qrText);
+                
+                // Успешное сканирование
+                this.vibrate('success'); // Вибрация успеха
+                
+                // Вставляем отсканированный текст
+                this.serialInput.value = qrText;
+                this.toggleClearButton();
+                
+                // Автоматически запускаем поиск после сканирования (опционально)
+                setTimeout(() => {
+                    this.vibrate('medium');
+                    this.searchSerial();
+                }, 300);
+                
+                return true;
+            });
+
+            tg.onEvent('scanQrPopupClosed', () => {
+                console.log('Сканер закрыт');
+                this.vibrate('light'); // Легкая вибрация при закрытии
+            });
+
+        } catch (error) {
+            console.error('Ошибка при открытии сканера:', error);
+            this.showError('Не удалось открыть сканер QR-кодов');
+            this.vibrate('error');
+        }
+    }
+
     toggleClearButton() {
         if (this.serialInput.value.length > 0) {
             this.clearBtn.classList.remove('hidden');
@@ -57,16 +175,15 @@ class WarrantyChecker {
         }
     }
 
-    // Очищаем поле ввода
     clearInput() {
         this.serialInput.value = '';
         this.serialInput.focus();
         this.clearBtn.classList.add('hidden');
         this.hideResult();
         this.hideError();
+        this.vibrate('light'); // Легкая вибрация при очистке
     }
 
-    // Парсинг даты из формата ДД.ММ.ГГГГ
     parseDate(dateStr) {
         if (!dateStr) return null;
         
@@ -88,7 +205,6 @@ class WarrantyChecker {
         return null;
     }
 
-    // Форматирование даты для отображения
     formatDate(date) {
         if (!date) return 'Не указана';
         
@@ -99,7 +215,6 @@ class WarrantyChecker {
         return `${day}.${month}.${year}`;
     }
 
-    // Форматирование срока гарантии
     formatWarrantyPeriod(days) {
         const years = days / 365;
         if (years >= 1) {
@@ -123,6 +238,7 @@ class WarrantyChecker {
         
         if (!serial) {
             this.showError('Введите серийный номер');
+            this.vibrate('error'); // Вибрация ошибки
             return;
         }
 
@@ -146,6 +262,7 @@ class WarrantyChecker {
 
             if (!rows || rows.length === 0) {
                 this.showError('Таблица пуста');
+                this.vibrate('error');
                 return;
             }
 
@@ -156,9 +273,9 @@ class WarrantyChecker {
                 if (row[0] && row[0].toString().toLowerCase() === serial.toLowerCase()) {
                     found = {
                         serial: row[0],
-                        stationName: row[1] || 'Не указано',      // НОВОЕ: название станции
-                        saleDate: row[2] || '',                   // Дата продажи
-                        warrantyDays: row[3] ? parseInt(row[3], 10) : DEFAULT_WARRANTY_DAYS  // Срок гарантии
+                        stationName: row[1] || 'Не указано',
+                        saleDate: row[2] || '',
+                        warrantyDays: row[3] ? parseInt(row[3], 10) : DEFAULT_WARRANTY_DAYS
                     };
                     break;
                 }
@@ -166,13 +283,16 @@ class WarrantyChecker {
 
             if (found) {
                 this.showResult(found);
+                this.vibrate('success'); // Тройная вибрация успеха
             } else {
                 this.showError('Серийный номер не найден');
+                this.vibrate('error'); // Вибрация ошибки
             }
 
         } catch (error) {
             console.error('Ошибка:', error);
             this.showError('Ошибка при поиске. Проверьте подключение к интернету.');
+            this.vibrate('error');
         } finally {
             this.hideLoader();
         }
@@ -184,6 +304,7 @@ class WarrantyChecker {
         
         if (!saleDate) {
             this.showError('Неверный формат даты в таблице');
+            this.vibrate('error');
             return;
         }
 
@@ -205,16 +326,20 @@ class WarrantyChecker {
         this.warrantyPeriod.textContent = this.formatWarrantyPeriod(data.warrantyDays);
         this.warrantyUntil.textContent = this.formatDate(warrantyUntil);
         
-        // Определяем статус
+        // Определяем статус с соответствующей вибрацией
         let status = 'valid';
         let statusText = '✅ Гарантия действительна';
         
         if (daysLeft < 0) {
             status = 'expired';
             statusText = '❌ Гарантия истекла';
+            this.vibrate('warning'); // Вибрация предупреждения для истекшей гарантии
         } else if (daysLeft < 30) {
             status = 'warning';
             statusText = '⚠️ Гарантия скоро истекает';
+            this.vibrate('warning'); // Вибрация предупреждения
+        } else {
+            this.vibrate('success'); // Успех для действующей гарантии
         }
 
         // Обновляем статус
@@ -228,26 +353,30 @@ class WarrantyChecker {
 
         // Показываем результат
         this.result.classList.remove('hidden');
+        
+        // Дополнительная вибрация при появлении результата
+        setTimeout(() => {
+            this.vibrate('light');
+        }, 200);
     }
 
     showLoader() {
         this.loader.classList.remove('hidden');
         this.searchBtn.disabled = true;
+        this.scanBtn.disabled = true;
+        this.vibrate('light'); // Легкая вибрация при начале загрузки
     }
 
     hideLoader() {
         this.loader.classList.add('hidden');
         this.searchBtn.disabled = false;
+        this.scanBtn.disabled = false;
     }
 
     showError(message) {
         this.error.textContent = message;
         this.error.classList.remove('hidden');
-        
-        // Вибрация на телефоне (если поддерживается)
-        if (tg && tg.HapticFeedback) {
-            tg.HapticFeedback.notificationOccurred('error');
-        }
+        this.vibrate('error'); // Вибрация ошибки
     }
 
     hideError() {

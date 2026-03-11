@@ -31,12 +31,11 @@ body {
     font-weight: 600;
 }
 
-/* Обновленный search-container */
 .search-container {
     margin-bottom: 20px;
 }
 
-/* Обертка для инпута и крестика */
+/* Обновленная обертка для инпута с двумя кнопками */
 .search-wrapper {
     position: relative;
     width: 100%;
@@ -45,7 +44,7 @@ body {
 
 .search-input {
     width: 100%;
-    padding: 16px 45px 16px 16px; /* Отступ справа для крестика */
+    padding: 16px 90px 16px 16px; /* Увеличили отступ справа для двух кнопок */
     font-size: 16px;
     border: 2px solid #e2e8f0;
     border-radius: 14px;
@@ -61,7 +60,7 @@ body {
 /* Кнопка-крестик */
 .clear-btn {
     position: absolute;
-    right: 12px;
+    right: 45px; /* Сдвинули левее, чтобы освободить место для кнопки сканирования */
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -86,6 +85,37 @@ body {
 
 .clear-btn.hidden {
     display: none;
+}
+
+/* НОВОЕ: Кнопка сканирования QR */
+.scan-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+}
+
+.scan-btn:hover {
+    transform: translateY(-50%) scale(1.05);
+    background: linear-gradient(135deg, #5a6fd6 0%, #6a3f9c 100%);
+}
+
+.scan-btn:active {
+    transform: translateY(-50%) scale(0.95);
 }
 
 .search-btn {
@@ -220,7 +250,6 @@ body {
 .status-text.warning { color: #ed8936; }
 .status-text.expired { color: #f56565; }
 
-/* Стиль для строки со станцией */
 .station-row {
     background: #e9f0ff;
     padding: 12px 10px;

@@ -11,7 +11,7 @@
     <!-- Google Sheets API -->
     <script src="https://apis.google.com/js/api.js"></script>
     
-    <!-- Font Awesome для иконок (крестик) -->
+    <!-- Font Awesome для иконок -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- Стили -->
@@ -27,11 +27,15 @@
                     type="text" 
                     id="serialInput" 
                     class="search-input" 
-                    placeholder="Введите серийный номер"
+                    placeholder="Введите или отсканируйте серийный номер"
                     autocomplete="off"
                 >
                 <button id="clearBtn" class="clear-btn hidden" aria-label="Очистить">
                     <i class="fas fa-times"></i>
+                </button>
+                <!-- НОВОЕ: Кнопка сканирования QR -->
+                <button id="scanBtn" class="scan-btn" aria-label="Сканировать QR-код">
+                    <i class="fas fa-qrcode"></i>
                 </button>
             </div>
             <button id="searchBtn" class="search-btn">
@@ -51,7 +55,6 @@
             </div>
             
             <div class="result-content">
-                <!-- НОВОЕ: Название станции -->
                 <div class="info-row station-row">
                     <span class="info-label">📍 Зарядная станция:</span>
                     <span class="info-value" id="stationName"></span>
