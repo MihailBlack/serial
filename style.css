@@ -2,7 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
@@ -11,15 +11,15 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px;
 }
 
 .container {
     width: 100%;
     max-width: 400px;
-    padding: 20px;
-    margin: 20px;
     background: white;
     border-radius: 20px;
+    padding: 25px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
 
@@ -27,29 +27,25 @@ body {
     text-align: center;
     color: #2d3748;
     font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .search-container {
-    position: relative;
     margin-bottom: 20px;
 }
 
 .search-input {
     width: 100%;
-    padding: 15px 20px;
+    padding: 15px;
     font-size: 16px;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     outline: none;
-    transition: all 0.3s ease;
-    background: white;
+    margin-bottom: 10px;
 }
 
 .search-input:focus {
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .search-btn {
@@ -62,27 +58,21 @@ body {
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s ease;
-    margin-top: 10px;
 }
 
-.search-btn:hover {
-    transform: translateY(-2px);
+.search-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
-.search-btn:active {
-    transform: translateY(0);
-}
-
-/* Loader */
 .loader {
     text-align: center;
-    padding: 30px;
+    padding: 20px;
 }
 
 .spinner {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border: 4px solid #f3f3f3;
     border-top: 4px solid #667eea;
     border-radius: 50%;
@@ -95,31 +85,18 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* Result Card */
 .result-card {
     background: #f7fafc;
     border-radius: 16px;
     padding: 20px;
     margin-top: 20px;
-    animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .result-header {
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
     border-bottom: 2px solid #e2e8f0;
 }
 
@@ -132,51 +109,29 @@ body {
 
 .status-icon.valid {
     background: #48bb78;
-    position: relative;
 }
 
-.status-icon.valid::after {
-    content: "✓";
-    color: white;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 14px;
+.status-icon.warning {
+    background: #ed8936;
 }
 
 .status-icon.expired {
     background: #f56565;
-    position: relative;
-}
-
-.status-icon.expired::after {
-    content: "✗";
-    color: white;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 14px;
 }
 
 .status-text {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
 }
 
-.status-text.valid {
-    color: #48bb78;
-}
-
-.status-text.expired {
-    color: #f56565;
-}
+.status-text.valid { color: #48bb78; }
+.status-text.warning { color: #ed8936; }
+.status-text.expired { color: #f56565; }
 
 .info-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     padding: 8px 0;
     border-bottom: 1px dashed #e2e8f0;
 }
@@ -193,23 +148,8 @@ body {
 .info-value {
     color: #2d3748;
     font-weight: 600;
-    font-size: 15px;
 }
 
-.days-remaining {
-    font-size: 18px;
-    color: #667eea;
-}
-
-.days-remaining.warning {
-    color: #ed8936;
-}
-
-.days-remaining.critical {
-    color: #f56565;
-}
-
-/* Error Message */
 .error-message {
     background: #fed7d7;
     color: #c53030;
@@ -217,7 +157,6 @@ body {
     border-radius: 12px;
     margin-top: 20px;
     text-align: center;
-    font-weight: 500;
 }
 
 .hidden {
