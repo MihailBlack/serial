@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Проверка гарантии</title>
     
-    <!-- Telegram Web App -->
+    <!-- Telegram Web App SDK (загружаем, но не используем напрямую) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- MAX Bridge SDK -->
+    <script src="https://unpkg.com/@ru-max/bridge@latest"></script>
     
     <!-- Google Sheets API -->
     <script src="https://apis.google.com/js/api.js"></script>
@@ -21,6 +24,10 @@
     <div class="container">
         <h1 class="title">🔍 Проверка гарантии</h1>
         
+        <div class="platform-badge" id="platformBadge">
+            <!-- Сюда будет подставляться значок платформы -->
+        </div>
+        
         <div class="search-container">
             <div class="search-wrapper">
                 <input 
@@ -33,7 +40,6 @@
                 <button id="clearBtn" class="clear-btn hidden" aria-label="Очистить">
                     <i class="fas fa-times"></i>
                 </button>
-                <!-- НОВОЕ: Кнопка сканирования QR -->
                 <button id="scanBtn" class="scan-btn" aria-label="Сканировать QR-код">
                     <i class="fas fa-qrcode"></i>
                 </button>
@@ -91,6 +97,7 @@
     </div>
 
     <script src="config.js"></script>
+    <script src="platform-adapter.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
