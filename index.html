@@ -5,47 +5,299 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Проверка гарантии</title>
     
-    <!-- Telegram Web App SDK (ЗАГРУЖАЕМ ПЕРВЫМ и СРАЗУ ИНИЦИАЛИЗИРУЕМ) -->
+    <!-- Telegram Web App SDK (обязательно первым!) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- MAX Bridge SDK -->
-    <script src="https://unpkg.com/@ru-max/bridge@latest"></script>
     
     <!-- Google Sheets API -->
     <script src="https://apis.google.com/js/api.js"></script>
     
-    <!-- Font Awesome для иконок -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- Стили -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Стили - подключаем ПРЯМО ЗДЕСЬ, без отдельного файла для надежности -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .title {
+            text-align: center;
+            color: #2d3748;
+            font-size: 26px;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 90px 16px 16px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 45px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #a0aec0;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .clear-btn:hover {
+            background: #f7fafc;
+        }
+
+        .clear-btn.hidden {
+            display: none;
+        }
+
+        .scan-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .search-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            margin: 0 auto;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-card {
+            background: #f8fafc;
+            border-radius: 18px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .status-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            margin-right: 12px;
+            position: relative;
+        }
+
+        .status-icon.valid {
+            background: #48bb78;
+        }
+
+        .status-icon.valid::after {
+            content: "✓";
+            color: white;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
+        }
+
+        .status-icon.warning {
+            background: #ed8936;
+        }
+
+        .status-icon.warning::after {
+            content: "!";
+            color: white;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .status-icon.expired {
+            background: #f56565;
+        }
+
+        .status-icon.expired::after {
+            content: "✗";
+            color: white;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
+        }
+
+        .status-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .status-text.valid { color: #48bb78; }
+        .status-text.warning { color: #ed8936; }
+        .status-text.expired { color: #f56565; }
+
+        .station-row {
+            background: #e9f0ff;
+            padding: 12px 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: right;
+        }
+
+        .error-message {
+            background: #fff5f5;
+            color: #c53030;
+            padding: 16px;
+            border-radius: 14px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid #feb2b2;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1 class="title">🔍 Проверка гарантии</h1>
         
-        <!-- Убираем бейдж платформы, он ломал верстку -->
-        
-        <div class="search-container">
-            <div class="search-wrapper">
-                <input 
-                    type="text" 
-                    id="serialInput" 
-                    class="search-input" 
-                    placeholder="Введите или отсканируйте серийный номер"
-                    autocomplete="off"
-                >
-                <button id="clearBtn" class="clear-btn hidden" aria-label="Очистить">
-                    <i class="fas fa-times"></i>
-                </button>
-                <button id="scanBtn" class="scan-btn" aria-label="Сканировать QR-код">
-                    <i class="fas fa-qrcode"></i>
-                </button>
-            </div>
-            <button id="searchBtn" class="search-btn">
-                <span>Найти</span>
+        <div class="search-wrapper">
+            <input 
+                type="text" 
+                id="serialInput" 
+                class="search-input" 
+                placeholder="Введите или отсканируйте серийный номер"
+                autocomplete="off"
+            >
+            <button id="clearBtn" class="clear-btn hidden">
+                <i class="fas fa-times"></i>
+            </button>
+            <button id="scanBtn" class="scan-btn">
+                <i class="fas fa-qrcode"></i>
             </button>
         </div>
+        
+        <button id="searchBtn" class="search-btn">
+            Найти
+        </button>
 
         <div id="loader" class="loader hidden">
             <div class="spinner"></div>
@@ -61,32 +313,32 @@
             <div class="result-content">
                 <div class="info-row station-row">
                     <span class="info-label">📍 Зарядная станция:</span>
-                    <span class="info-value" id="stationName"></span>
+                    <span class="info-value" id="stationName">—</span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">🔢 Серийный номер:</span>
-                    <span class="info-value" id="serialNumber"></span>
+                    <span class="info-value" id="serialNumber">—</span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">📅 Дата продажи:</span>
-                    <span class="info-value" id="saleDate"></span>
+                    <span class="info-value" id="saleDate">—</span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">⏱️ Срок гарантии:</span>
-                    <span class="info-value" id="warrantyPeriod"></span>
+                    <span class="info-value" id="warrantyPeriod">—</span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">📆 Гарантия до:</span>
-                    <span class="info-value" id="warrantyUntil"></span>
+                    <span class="info-value" id="warrantyUntil">—</span>
                 </div>
                 
                 <div class="info-row">
                     <span class="info-label">⏳ Осталось дней:</span>
-                    <span class="info-value" id="daysRemaining"></span>
+                    <span class="info-value" id="daysRemaining">—</span>
                 </div>
             </div>
         </div>
@@ -94,11 +346,259 @@
         <div id="error" class="error-message hidden"></div>
     </div>
 
-    <!-- Сначала подключаем конфиг -->
-    <script src="config.js"></script>
-    <!-- ПОТОМ адаптер платформы -->
-    <script src="platform-adapter.js"></script>
-    <!-- И только потом основное приложение -->
-    <script src="app.js"></script>
+    <script>
+        // Конфигурация
+        const CONFIG = {
+            SPREADSHEED_ID: '1ijID-VPJ48qz53gq4MXQTxAxhrFdMuEltm0TY6gwIYQ',
+            SHEET_NAME: 'Sheet1',
+            API_KEY: 'AIzaSyAJr_tsIBBK3COL6AL_8fziqJrKDWDhUVM',
+            RANGE: 'A:D'
+        };
+        
+        const DEFAULT_WARRANTY_DAYS = 730;
+        
+        // Инициализация Telegram
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+        
+        // Основной класс приложения
+        class WarrantyChecker {
+            constructor() {
+                this.init();
+                this.bindEvents();
+            }
+            
+            init() {
+                this.serialInput = document.getElementById('serialInput');
+                this.searchBtn = document.getElementById('searchBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.scanBtn = document.getElementById('scanBtn');
+                this.loader = document.getElementById('loader');
+                this.result = document.getElementById('result');
+                this.error = document.getElementById('error');
+                
+                this.stationName = document.getElementById('stationName');
+                this.serialNumber = document.getElementById('serialNumber');
+                this.saleDate = document.getElementById('saleDate');
+                this.warrantyPeriod = document.getElementById('warrantyPeriod');
+                this.warrantyUntil = document.getElementById('warrantyUntil');
+                this.daysRemaining = document.getElementById('daysRemaining');
+                this.statusIcon = document.getElementById('statusIcon');
+                this.statusText = document.getElementById('statusText');
+                
+                this.toggleClearButton();
+                this.loadGoogleAPI();
+            }
+            
+            loadGoogleAPI() {
+                gapi.load('client', () => {
+                    console.log('Google API загружен');
+                });
+            }
+            
+            bindEvents() {
+                this.searchBtn.addEventListener('click', () => this.searchSerial());
+                this.clearBtn.addEventListener('click', () => this.clearInput());
+                this.scanBtn.addEventListener('click', () => this.scanQRCode());
+                this.serialInput.addEventListener('input', () => this.toggleClearButton());
+                this.serialInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.searchSerial();
+                });
+            }
+            
+            toggleClearButton() {
+                if (this.serialInput.value.length > 0) {
+                    this.clearBtn.classList.remove('hidden');
+                } else {
+                    this.clearBtn.classList.add('hidden');
+                }
+            }
+            
+            clearInput() {
+                this.serialInput.value = '';
+                this.clearBtn.classList.add('hidden');
+                this.hideResult();
+                this.hideError();
+                this.serialInput.focus();
+            }
+            
+            scanQRCode() {
+                if (tg && tg.showScanQrPopup) {
+                    tg.showScanQrPopup({
+                        text: 'Наведите камеру на QR-код с серийным номером'
+                    }, (qrText) => {
+                        this.serialInput.value = qrText;
+                        this.toggleClearButton();
+                        setTimeout(() => this.searchSerial(), 300);
+                        return true;
+                    });
+                } else {
+                    this.showError('Сканирование доступно только в Telegram');
+                }
+            }
+            
+            parseDate(dateStr) {
+                if (!dateStr) return null;
+                dateStr = dateStr.toString().trim();
+                
+                if (dateStr.includes('.')) {
+                    const parts = dateStr.split('.');
+                    if (parts.length === 3) {
+                        const day = parseInt(parts[0], 10);
+                        const month = parseInt(parts[1], 10) - 1;
+                        const year = parseInt(parts[2], 10);
+                        return new Date(year, month, day);
+                    }
+                }
+                return null;
+            }
+            
+            formatDate(date) {
+                if (!date) return 'Не указана';
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}.${month}.${year}`;
+            }
+            
+            async searchSerial() {
+                const serial = this.serialInput.value.trim();
+                
+                if (!serial) {
+                    this.showError('Введите серийный номер');
+                    return;
+                }
+                
+                this.showLoader();
+                this.hideResult();
+                this.hideError();
+                
+                try {
+                    await gapi.client.init({
+                        apiKey: CONFIG.API_KEY,
+                        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+                    });
+                    
+                    const response = await gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: CONFIG.SPREADSHEED_ID,
+                        range: `${CONFIG.SHEET_NAME}!${CONFIG.RANGE}`
+                    });
+                    
+                    const rows = response.result.values;
+                    
+                    if (!rows || rows.length === 0) {
+                        this.showError('Таблица пуста');
+                        return;
+                    }
+                    
+                    let found = null;
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (row[0] && row[0].toString().toLowerCase() === serial.toLowerCase()) {
+                            found = {
+                                serial: row[0],
+                                stationName: row[1] || 'Не указано',
+                                saleDate: row[2] || '',
+                                warrantyDays: row[3] ? parseInt(row[3], 10) : DEFAULT_WARRANTY_DAYS
+                            };
+                            break;
+                        }
+                    }
+                    
+                    if (found) {
+                        this.showResult(found);
+                    } else {
+                        this.showError('Серийный номер не найден');
+                    }
+                    
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    this.showError('Ошибка при поиске');
+                } finally {
+                    this.hideLoader();
+                }
+            }
+            
+            showResult(data) {
+                const saleDate = this.parseDate(data.saleDate);
+                
+                if (!saleDate) {
+                    this.showError('Неверный формат даты');
+                    return;
+                }
+                
+                const warrantyUntil = new Date(saleDate);
+                warrantyUntil.setDate(warrantyUntil.getDate() + data.warrantyDays);
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                warrantyUntil.setHours(0, 0, 0, 0);
+                
+                const daysLeft = Math.ceil((warrantyUntil - today) / (1000 * 60 * 60 * 24));
+                
+                this.stationName.textContent = data.stationName;
+                this.serialNumber.textContent = data.serial;
+                this.saleDate.textContent = this.formatDate(saleDate);
+                
+                const years = (data.warrantyDays / 365).toFixed(1);
+                this.warrantyPeriod.textContent = `${years} лет (${data.warrantyDays} дн.)`;
+                this.warrantyUntil.textContent = this.formatDate(warrantyUntil);
+                
+                let status = 'valid';
+                let statusText = '✅ Гарантия действительна';
+                
+                if (daysLeft < 0) {
+                    status = 'expired';
+                    statusText = '❌ Гарантия истекла';
+                } else if (daysLeft < 30) {
+                    status = 'warning';
+                    statusText = '⚠️ Гарантия скоро истекает';
+                }
+                
+                this.statusIcon.className = 'status-icon ' + status;
+                this.statusText.className = 'status-text ' + status;
+                this.statusText.textContent = statusText;
+                
+                this.daysRemaining.textContent = daysLeft < 0 ? 'Истекла' : daysLeft + ' дн.';
+                
+                this.result.classList.remove('hidden');
+            }
+            
+            showLoader() {
+                this.loader.classList.remove('hidden');
+                this.searchBtn.disabled = true;
+                this.scanBtn.disabled = true;
+            }
+            
+            hideLoader() {
+                this.loader.classList.add('hidden');
+                this.searchBtn.disabled = false;
+                this.scanBtn.disabled = false;
+            }
+            
+            showError(message) {
+                this.error.textContent = message;
+                this.error.classList.remove('hidden');
+                
+                if (tg && tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+            }
+            
+            hideError() {
+                this.error.classList.add('hidden');
+            }
+            
+            hideResult() {
+                this.result.classList.add('hidden');
+            }
+        }
+        
+        // Запуск после загрузки страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            new WarrantyChecker();
+        });
+    </script>
 </body>
 </html>
