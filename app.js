@@ -1,16 +1,11 @@
-// Исправленная версия для Telegram
+// Инициализация Telegram Web App
+const tg = window.Telegram.WebApp;
+tg.expand();
 
 class WarrantyChecker {
     constructor() {
         this.init();
         this.bindEvents();
-        
-        // Приветственная вибрация
-        setTimeout(() => {
-            if (window.Platform) {
-                window.Platform.vibrate('light');
-            }
-        }, 500);
     }
 
     init() {
@@ -38,53 +33,79 @@ class WarrantyChecker {
         // Показываем/скрываем крестик
         this.toggleClearButton();
         
-        // Адаптация под тему Telegram
-        this.applyTelegramTheme();
+        // Приветственная вибрация (очень легкая)
+        this.vibrate('light');
     }
-    
-    applyTelegramTheme() {
-        if (!window.Platform) return;
+
+    // НОВЫЙ МЕТОД: Вибрация разных типов
+    vibrate(type = 'light') {
+        if (!tg || !tg.HapticFeedback) return;
         
-        const scheme = window.Platform.getColorScheme();
-        const container = document.querySelector('.container');
-        const title = document.querySelector('.title');
-        
-        if (scheme === 'dark') {
-            document.body.style.background = '#1a202c';
-            if (container) {
-                container.style.background = '#2d3748';
-                container.style.boxShadow = '0 20px 60px rgba(0,0,0,0.5)';
+        try {
+            switch(type) {
+                case 'light':
+                    // Легкое нажатие (для кнопок, полей ввода)
+                    tg.HapticFeedback.impactOccurred('light');
+                    break;
+                    
+                case 'medium':
+                    // Среднее нажатие (для важных действий)
+                    tg.HapticFeedback.impactOccurred('medium');
+                    break;
+                    
+                case 'heavy':
+                    // Сильное нажатие (для очень важных действий)
+                    tg.HapticFeedback.impactOccurred('heavy');
+                    break;
+                    
+                case 'success':
+                    // Успешное действие
+                    tg.HapticFeedback.notificationOccurred('success');
+                    break;
+                    
+                case 'error':
+                    // Ошибка
+                    tg.HapticFeedback.notificationOccurred('error');
+                    break;
+                    
+                case 'warning':
+                    // Предупреждение
+                    tg.HapticFeedback.notificationOccurred('warning');
+                    break;
+                    
+                case 'selection':
+                    // Изменение выделения
+                    tg.HapticFeedback.selectionChanged();
+                    break;
+                    
+                default:
+                    tg.HapticFeedback.impactOccurred('light');
             }
-            if (title) {
-                title.style.color = '#f7fafc';
-            }
-        } else {
-            document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-            if (container) {
-                container.style.background = 'white';
-            }
+        } catch (e) {
+            console.log('Haptic feedback error:', e);
         }
     }
 
     loadGoogleAPI() {
         gapi.load('client', () => {
             console.log('Google API загружен');
+            this.vibrate('light'); // Легкая вибрация при загрузке API
         });
     }
 
     bindEvents() {
         this.searchBtn.addEventListener('click', () => {
-            if (window.Platform) window.Platform.vibrate('medium');
+            this.vibrate('medium'); // Вибрация при нажатии на поиск
             this.searchSerial();
         });
         
         this.clearBtn.addEventListener('click', () => {
-            if (window.Platform) window.Platform.vibrate('light');
+            this.vibrate('light'); // Легкая вибрация при очистке
             this.clearInput();
         });
         
         this.scanBtn.addEventListener('click', () => {
-            if (window.Platform) window.Platform.vibrate('heavy');
+            this.vibrate('heavy'); // Сильная вибрация при открытии сканера
             this.scanQRCode();
         });
         
@@ -94,44 +115,55 @@ class WarrantyChecker {
         
         this.serialInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                if (window.Platform) window.Platform.vibrate('medium');
+                this.vibrate('medium'); // Вибрация при поиске через Enter
                 this.searchSerial();
             }
         });
         
+        // Вибрация при фокусе на поле ввода
         this.serialInput.addEventListener('focus', () => {
-            if (window.Platform) window.Platform.vibrate('light');
+            this.vibrate('light');
         });
     }
 
     scanQRCode() {
-        if (!window.Platform) {
-            this.showError('Ошибка инициализации');
+        if (!tg || !tg.showScanQrPopup) {
+            this.showError('Сканирование не поддерживается в этом окружении');
+            this.vibrate('error'); // Вибрация ошибки
             return;
         }
-        
-        const success = window.Platform.scanQRCode(
-            (qrText) => {
+
+        try {
+            tg.showScanQrPopup({
+                text: 'Наведите камеру на QR-код с серийным номером'
+            }, (qrText) => {
                 console.log('Отсканирован QR:', qrText);
-                if (window.Platform) window.Platform.vibrate('success');
                 
+                // Успешное сканирование
+                this.vibrate('success'); // Вибрация успеха
+                
+                // Вставляем отсканированный текст
                 this.serialInput.value = qrText;
                 this.toggleClearButton();
                 
-                // Автоматически ищем после сканирования
+                // Автоматически запускаем поиск после сканирования (опционально)
                 setTimeout(() => {
-                    if (window.Platform) window.Platform.vibrate('medium');
+                    this.vibrate('medium');
                     this.searchSerial();
                 }, 300);
-            },
-            () => {
+                
+                return true;
+            });
+
+            tg.onEvent('scanQrPopupClosed', () => {
                 console.log('Сканер закрыт');
-                if (window.Platform) window.Platform.vibrate('light');
-            }
-        );
-        
-        if (!success) {
-            this.showError('Сканирование доступно только в Telegram');
+                this.vibrate('light'); // Легкая вибрация при закрытии
+            });
+
+        } catch (error) {
+            console.error('Ошибка при открытии сканера:', error);
+            this.showError('Не удалось открыть сканер QR-кодов');
+            this.vibrate('error');
         }
     }
 
@@ -149,6 +181,7 @@ class WarrantyChecker {
         this.clearBtn.classList.add('hidden');
         this.hideResult();
         this.hideError();
+        this.vibrate('light'); // Легкая вибрация при очистке
     }
 
     parseDate(dateStr) {
@@ -205,7 +238,7 @@ class WarrantyChecker {
         
         if (!serial) {
             this.showError('Введите серийный номер');
-            if (window.Platform) window.Platform.vibrate('error');
+            this.vibrate('error'); // Вибрация ошибки
             return;
         }
 
@@ -225,13 +258,15 @@ class WarrantyChecker {
             });
 
             const rows = response.result.values;
+            console.log('Получены строки:', rows);
 
             if (!rows || rows.length === 0) {
                 this.showError('Таблица пуста');
-                if (window.Platform) window.Platform.vibrate('error');
+                this.vibrate('error');
                 return;
             }
 
+            // Ищем серийный номер
             let found = null;
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
@@ -248,77 +283,88 @@ class WarrantyChecker {
 
             if (found) {
                 this.showResult(found);
-                if (window.Platform) window.Platform.vibrate('success');
+                this.vibrate('success'); // Тройная вибрация успеха
             } else {
                 this.showError('Серийный номер не найден');
-                if (window.Platform) window.Platform.vibrate('error');
+                this.vibrate('error'); // Вибрация ошибки
             }
 
         } catch (error) {
             console.error('Ошибка:', error);
             this.showError('Ошибка при поиске. Проверьте подключение к интернету.');
-            if (window.Platform) window.Platform.vibrate('error');
+            this.vibrate('error');
         } finally {
             this.hideLoader();
         }
     }
 
     showResult(data) {
+        // Парсим дату продажи
         const saleDate = this.parseDate(data.saleDate);
         
         if (!saleDate) {
             this.showError('Неверный формат даты в таблице');
-            if (window.Platform) window.Platform.vibrate('error');
+            this.vibrate('error');
             return;
         }
 
+        // Рассчитываем дату окончания гарантии
         const warrantyUntil = new Date(saleDate);
         warrantyUntil.setDate(warrantyUntil.getDate() + data.warrantyDays);
 
+        // Рассчитываем оставшиеся дни
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         warrantyUntil.setHours(0, 0, 0, 0);
         
         const daysLeft = Math.ceil((warrantyUntil - today) / (1000 * 60 * 60 * 24));
 
+        // Заполняем данные
         this.stationName.textContent = data.stationName;
         this.serialNumber.textContent = data.serial;
         this.saleDate.textContent = this.formatDate(saleDate);
         this.warrantyPeriod.textContent = this.formatWarrantyPeriod(data.warrantyDays);
         this.warrantyUntil.textContent = this.formatDate(warrantyUntil);
         
+        // Определяем статус с соответствующей вибрацией
         let status = 'valid';
         let statusText = '✅ Гарантия действительна';
         
         if (daysLeft < 0) {
             status = 'expired';
             statusText = '❌ Гарантия истекла';
+            this.vibrate('warning'); // Вибрация предупреждения для истекшей гарантии
         } else if (daysLeft < 30) {
             status = 'warning';
             statusText = '⚠️ Гарантия скоро истекает';
+            this.vibrate('warning'); // Вибрация предупреждения
+        } else {
+            this.vibrate('success'); // Успех для действующей гарантии
         }
 
+        // Обновляем статус
         this.statusIcon.className = 'status-icon ' + status;
         this.statusText.className = 'status-text ' + status;
         this.statusText.textContent = statusText;
 
+        // Дни до окончания
         this.daysRemaining.textContent = daysLeft < 0 ? 'Истекла' : daysLeft + ' дн.';
-        
-        if (daysLeft < 0) {
-            this.daysRemaining.style.color = '#f56565';
-        } else if (daysLeft < 30) {
-            this.daysRemaining.style.color = '#ed8936';
-        } else {
-            this.daysRemaining.style.color = '#2d3748';
-        }
+        this.daysRemaining.className = 'info-value days-remaining' + (daysLeft < 0 ? ' expired' : '');
 
+        // Показываем результат
         this.result.classList.remove('hidden');
+        
+        // Дополнительная вибрация при появлении результата
+        setTimeout(() => {
+            this.vibrate('light');
+        }, 200);
     }
 
     showLoader() {
         this.loader.classList.remove('hidden');
         this.searchBtn.disabled = true;
         this.scanBtn.disabled = true;
+        this.vibrate('light'); // Легкая вибрация при начале загрузки
     }
 
     hideLoader() {
@@ -330,10 +376,7 @@ class WarrantyChecker {
     showError(message) {
         this.error.textContent = message;
         this.error.classList.remove('hidden');
-        
-        if (window.Platform) {
-            window.Platform.vibrate('error');
-        }
+        this.vibrate('error'); // Вибрация ошибки
     }
 
     hideError() {
@@ -347,8 +390,10 @@ class WarrantyChecker {
 
 // Запуск приложения
 document.addEventListener('DOMContentLoaded', () => {
-    // Даем время на инициализацию платформы
-    setTimeout(() => {
-        new WarrantyChecker();
-    }, 100);
+    new WarrantyChecker();
+    
+    // Адаптация под тему Telegram
+    if (tg.colorScheme === 'dark') {
+        document.body.style.background = 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)';
+    }
 });
