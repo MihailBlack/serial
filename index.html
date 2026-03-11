@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Проверка гарантии</title>
     
-    <!-- Telegram Web App SDK -->
+    <!-- Telegram Web App SDK (обязательно первым!) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- MAX Bridge SDK -->
-    <script src="https://unpkg.com/@ru-max/bridge@latest"></script>
     
     <!-- Google Sheets API -->
     <script src="https://apis.google.com/js/api.js"></script>
@@ -17,6 +14,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <!-- Стили - подключаем ПРЯМО ЗДЕСЬ, без отдельного файла для надежности -->
     <style>
         * {
             margin: 0;
@@ -49,20 +47,6 @@
             font-size: 26px;
             margin-bottom: 25px;
             font-weight: 600;
-        }
-
-        .platform-badge {
-            text-align: center;
-            margin-bottom: 15px;
-            padding: 5px 10px;
-            background: #f0f4fa;
-            border-radius: 20px;
-            display: inline-block;
-            margin-left: auto;
-            margin-right: auto;
-            width: fit-content;
-            font-size: 12px;
-            color: #4a5568;
         }
 
         .search-wrapper {
@@ -129,26 +113,6 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
-        }
-
-        .max-upload-btn {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #4a5568;
-            border: none;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 8px;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
         .search-btn {
@@ -315,14 +279,12 @@
     <div class="container">
         <h1 class="title">🔍 Проверка гарантии</h1>
         
-        <div id="platformBadge" class="platform-badge"></div>
-        
         <div class="search-wrapper">
             <input 
                 type="text" 
                 id="serialInput" 
                 class="search-input" 
-                placeholder="Введите серийный номер"
+                placeholder="Введите или отсканируйте серийный номер"
                 autocomplete="off"
             >
             <button id="clearBtn" class="clear-btn hidden">
@@ -330,9 +292,6 @@
             </button>
             <button id="scanBtn" class="scan-btn">
                 <i class="fas fa-qrcode"></i>
-            </button>
-            <button id="maxUploadBtn" class="max-upload-btn hidden">
-                <i class="fas fa-upload"></i>
             </button>
         </div>
         
@@ -390,7 +349,7 @@
     <script>
         // Конфигурация
         const CONFIG = {
-            SPREADSHEET_ID: '1ijID-VPJ48qz53gq4MXQTxAxhrFdMuEltm0TY6gwIYQ',
+            SPREADSHEED_ID: '1ijID-VPJ48qz53gq4MXQTxAxhrFdMuEltm0TY6gwIYQ',
             SHEET_NAME: 'Sheet1',
             API_KEY: 'AIzaSyAJr_tsIBBK3COL6AL_8fziqJrKDWDhUVM',
             RANGE: 'A:D'
@@ -398,53 +357,10 @@
         
         const DEFAULT_WARRANTY_DAYS = 730;
         
-        // Определение платформы
-        function detectPlatform() {
-            // Проверяем Telegram
-            if (window.Telegram && window.Telegram.WebApp) {
-                try {
-                    const tg = window.Telegram.WebApp;
-                    if (tg.initData !== undefined) {
-                        return 'telegram';
-                    }
-                } catch (e) {}
-            }
-            
-            // Проверяем MAX
-            if (window.Max && typeof window.Max.ready === 'function') {
-                return 'max';
-            }
-            
-            return 'web';
-        }
-        
-        const platform = detectPlatform();
-        console.log('Платформа:', platform);
-        
-        // Инициализация SDK платформы
-        let tg = null;
-        let max = null;
-        
-        if (platform === 'telegram') {
-            tg = window.Telegram.WebApp;
-            tg.expand();
-            tg.ready();
-            
-            // Показываем бейдж
-            document.getElementById('platformBadge').innerHTML = '📱 Telegram';
-        } else if (platform === 'max') {
-            max = window.Max;
-            max.ready();
-            
-            // Показываем бейдж и меняем кнопку сканирования
-            document.getElementById('platformBadge').innerHTML = '💼 MAX';
-            
-            // В MAX показываем кнопку загрузки вместо QR
-            document.getElementById('scanBtn').classList.add('hidden');
-            document.getElementById('maxUploadBtn').classList.remove('hidden');
-        } else {
-            document.getElementById('platformBadge').innerHTML = '🌐 Web версия';
-        }
+        // Инициализация Telegram
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
         
         // Основной класс приложения
         class WarrantyChecker {
@@ -458,7 +374,6 @@
                 this.searchBtn = document.getElementById('searchBtn');
                 this.clearBtn = document.getElementById('clearBtn');
                 this.scanBtn = document.getElementById('scanBtn');
-                this.maxUploadBtn = document.getElementById('maxUploadBtn');
                 this.loader = document.getElementById('loader');
                 this.result = document.getElementById('result');
                 this.error = document.getElementById('error');
@@ -485,13 +400,7 @@
             bindEvents() {
                 this.searchBtn.addEventListener('click', () => this.searchSerial());
                 this.clearBtn.addEventListener('click', () => this.clearInput());
-                
-                if (platform === 'telegram') {
-                    this.scanBtn.addEventListener('click', () => this.scanQRCode());
-                } else if (platform === 'max') {
-                    this.maxUploadBtn.addEventListener('click', () => this.uploadPhoto());
-                }
-                
+                this.scanBtn.addEventListener('click', () => this.scanQRCode());
                 this.serialInput.addEventListener('input', () => this.toggleClearButton());
                 this.serialInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') this.searchSerial();
@@ -524,24 +433,8 @@
                         setTimeout(() => this.searchSerial(), 300);
                         return true;
                     });
-                }
-            }
-            
-            uploadPhoto() {
-                if (max && max.showFilePicker) {
-                    max.showFilePicker({
-                        accept: 'image/*',
-                        multiple: false
-                    }).then(files => {
-                        if (files && files.length > 0) {
-                            this.showError('Функция распознавания QR из фото появится позже. Пока введите номер вручную.');
-                        }
-                    }).catch(err => {
-                        console.log('Отмена выбора файла');
-                    });
                 } else {
-                    // Если нет API для выбора файлов, показываем подсказку
-                    this.showError('В MAX сканирование QR пока не поддерживается. Введите номер вручную.');
+                    this.showError('Сканирование доступно только в Telegram');
                 }
             }
             
@@ -588,7 +481,7 @@
                     });
                     
                     const response = await gapi.client.sheets.spreadsheets.values.get({
-                        spreadsheetId: CONFIG.SPREADSHEET_ID,
+                        spreadsheetId: CONFIG.SPREADSHEED_ID,
                         range: `${CONFIG.SHEET_NAME}!${CONFIG.RANGE}`
                     });
                     
@@ -615,22 +508,8 @@
                     
                     if (found) {
                         this.showResult(found);
-                        
-                        // Вибрация при успехе
-                        if (tg && tg.HapticFeedback) {
-                            tg.HapticFeedback.notificationOccurred('success');
-                        } else if (max && max.HapticFeedback) {
-                            max.HapticFeedback.notificationSuccess();
-                        }
                     } else {
                         this.showError('Серийный номер не найден');
-                        
-                        // Вибрация при ошибке
-                        if (tg && tg.HapticFeedback) {
-                            tg.HapticFeedback.notificationOccurred('error');
-                        } else if (max && max.HapticFeedback) {
-                            max.HapticFeedback.notificationError();
-                        }
                     }
                     
                 } catch (error) {
@@ -690,19 +569,21 @@
                 this.loader.classList.remove('hidden');
                 this.searchBtn.disabled = true;
                 this.scanBtn.disabled = true;
-                if (this.maxUploadBtn) this.maxUploadBtn.disabled = true;
             }
             
             hideLoader() {
                 this.loader.classList.add('hidden');
                 this.searchBtn.disabled = false;
                 this.scanBtn.disabled = false;
-                if (this.maxUploadBtn) this.maxUploadBtn.disabled = false;
             }
             
             showError(message) {
                 this.error.textContent = message;
                 this.error.classList.remove('hidden');
+                
+                if (tg && tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
             }
             
             hideError() {
