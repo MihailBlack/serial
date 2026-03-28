@@ -1,15 +1,96 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NetWorking MVP</title>
-    <meta http-equiv="refresh" content="0; url=./frontend/" />
-  </head>
-  <body>
-    <p>
-      Переход на приложение...
-      <a href="./frontend/">Открыть вручную</a>
-    </p>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка гарантии</title>
+    
+    <!-- Telegram Web App -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Google Sheets API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    
+    <!-- Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🔍 Проверка гарантии</h1>
+        
+        <div class="search-container">
+            <div class="search-wrapper">
+                <input 
+                    type="text" 
+                    id="serialInput" 
+                    class="search-input" 
+                    placeholder="Введите или отсканируйте серийный номер"
+                    autocomplete="off"
+                >
+                <button id="clearBtn" class="clear-btn hidden" aria-label="Очистить">
+                    <i class="fas fa-times"></i>
+                </button>
+                <!-- НОВОЕ: Кнопка сканирования QR -->
+                <button id="scanBtn" class="scan-btn" aria-label="Сканировать QR-код">
+                    <i class="fas fa-qrcode"></i>
+                </button>
+            </div>
+            <button id="searchBtn" class="search-btn">
+                <span>Найти</span>
+            </button>
+        </div>
+
+        <div id="loader" class="loader hidden">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px; color: #666;">Поиск...</p>
+        </div>
+
+        <div id="result" class="result-card hidden">
+            <div class="result-header">
+                <span class="status-icon" id="statusIcon"></span>
+                <span class="status-text" id="statusText"></span>
+            </div>
+            
+            <div class="result-content">
+                <div class="info-row station-row">
+                    <span class="info-label">📍 Зарядная станция:</span>
+                    <span class="info-value" id="stationName"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">🔢 Серийный номер:</span>
+                    <span class="info-value" id="serialNumber"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">📅 Дата продажи:</span>
+                    <span class="info-value" id="saleDate"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">⏱️ Срок гарантии:</span>
+                    <span class="info-value" id="warrantyPeriod"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">📆 Гарантия до:</span>
+                    <span class="info-value" id="warrantyUntil"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">⏳ Осталось дней:</span>
+                    <span class="info-value" id="daysRemaining"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="error" class="error-message hidden"></div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
 </html>
